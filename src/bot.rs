@@ -28,7 +28,7 @@ impl Bot {
             default_query: config.arxiv_search_query.clone(),
             default_max_results: config.arxiv_max_results,
             schedule: config.collection_schedule.clone(),
-            guild_id: config.guild_id,
+            guild_id: config.discord.guild_id,
         }
     }
 

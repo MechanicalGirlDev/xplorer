@@ -30,14 +30,14 @@ async fn main() {
     // Set up Discord client
     let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES;
 
-    let mut client = Client::builder(&config.discord_token, intents)
+    let mut client = Client::builder(&config.discord.token, intents)
         .event_handler(bot)
         .await
         .expect("Error creating client");
 
     // Set up scheduler for periodic collection
     let schedule_str = config.collection_schedule.clone();
-    let channel_id = config.channel_id;
+    let channel_id = config.discord.channel_id;
 
     tokio::spawn(async move {
         tracing::info!("Setting up scheduler");
