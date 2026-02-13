@@ -1,7 +1,5 @@
 # xplorer
 
-[![Rust](https://github.com/MechanicalGirlDev/xplorer/actions/workflows/rust.yml/badge.svg)](https://github.com/MechanicalGirlDev/xplorer/actions/workflows/rust.yml)
-
 A Discord bot written in Rust that collects and shares academic papers and articles from various sources like arXiv.
 
 ## Features
