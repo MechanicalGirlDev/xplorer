@@ -16,6 +16,12 @@ impl ArxivCollector {
     }
 }
 
+impl Default for ArxivCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Deserialize)]
 struct ArxivFeed {
     #[serde(rename = "entry", default)]
