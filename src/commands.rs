@@ -1,5 +1,5 @@
 use serenity::builder::{CreateCommand, CreateCommandOption};
-use serenity::model::application::{CommandOptionType};
+use serenity::model::application::CommandOptionType;
 
 /// Creates the /collect command
 pub fn collect_command() -> CreateCommand {
@@ -16,12 +16,8 @@ pub fn collect_command() -> CreateCommand {
             .add_string_choice("All Sources", "all"),
         )
         .add_option(
-            CreateCommandOption::new(
-                CommandOptionType::String,
-                "query",
-                "Search query",
-            )
-            .required(false),
+            CreateCommandOption::new(CommandOptionType::String, "query", "Search query")
+                .required(false),
         )
         .add_option(
             CreateCommandOption::new(
@@ -37,12 +33,10 @@ pub fn collect_command() -> CreateCommand {
 
 /// Creates the /sources command
 pub fn sources_command() -> CreateCommand {
-    CreateCommand::new("sources")
-        .description("List all available article sources")
+    CreateCommand::new("sources").description("List all available article sources")
 }
 
 /// Creates the /schedule command
 pub fn schedule_command() -> CreateCommand {
-    CreateCommand::new("schedule")
-        .description("Show the current collection schedule")
+    CreateCommand::new("schedule").description("Show the current collection schedule")
 }
