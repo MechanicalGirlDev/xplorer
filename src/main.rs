@@ -41,9 +41,9 @@ async fn main() {
 
     tokio::spawn(async move {
         tracing::info!("Setting up scheduler");
-        
+
         let scheduler = JobScheduler::new().await;
-        
+
         if let Ok(scheduler) = scheduler {
             if let Some(channel_id) = channel_id {
                 tracing::info!("Periodic collection will post to channel {}", channel_id);
