@@ -20,7 +20,7 @@ async fn test_article_serialization() {
 
     let json = serde_json::to_string(&article).unwrap();
     assert!(json.contains("Test Paper"));
-    
+
     let deserialized: Article = serde_json::from_str(&json).unwrap();
     assert_eq!(deserialized.title, article.title);
 }
@@ -30,7 +30,7 @@ async fn test_url_encoding() {
     // Test the URL encoding works for various characters
     // This is indirectly tested through the ArxivCollector
     let collector = ArxivCollector::new();
-    
+
     // We can't test actual API calls in unit tests, but we can verify
     // that the collector is properly initialized
     assert_eq!(collector.name(), "Arxiv");

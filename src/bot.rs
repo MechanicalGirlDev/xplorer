@@ -1,4 +1,7 @@
-use serenity::all::{CommandInteraction, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse};
+use serenity::all::{
+    CommandInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,
+    EditInteractionResponse,
+};
 use serenity::async_trait;
 use serenity::client::{Context, EventHandler};
 use serenity::model::gateway::Ready;
@@ -58,10 +61,7 @@ impl Bot {
             .unwrap_or(self.default_max_results as i64) as usize;
 
         // Defer the response since collection might take time
-        if let Err(why) = command
-            .defer(&ctx.http)
-            .await
-        {
+        if let Err(why) = command.defer(&ctx.http).await {
             tracing::error!("Cannot defer response: {}", why);
             return;
         }
@@ -73,7 +73,11 @@ impl Bot {
             for collector in collectors.iter() {
                 match collector.collect(query, max_results).await {
                     Ok(articles) => {
-                        tracing::info!("Collected {} articles from {}", articles.len(), collector.name());
+                        tracing::info!(
+                            "Collected {} articles from {}",
+                            articles.len(),
+                            collector.name()
+                        );
                         all_articles.extend(articles);
                     }
                     Err(e) => {
@@ -89,7 +93,11 @@ impl Bot {
             if let Some(collector) = collector {
                 match collector.collect(query, max_results).await {
                     Ok(articles) => {
-                        tracing::info!("Collected {} articles from {}", articles.len(), collector.name());
+                        tracing::info!(
+                            "Collected {} articles from {}",
+                            articles.len(),
+                            collector.name()
+                        );
                         all_articles = articles;
                     }
                     Err(e) => {
@@ -97,8 +105,7 @@ impl Bot {
                         let _ = command
                             .edit_response(
                                 &ctx.http,
-                                EditInteractionResponse::new()
-                                    .content(format!("❌ Error: {}", e)),
+                                EditInteractionResponse::new().content(format!("❌ Error: {}", e)),
                             )
                             .await;
                         return;
@@ -147,8 +154,8 @@ impl Bot {
     }
 
     async fn handle_schedule_command(&self, ctx: &Context, command: &CommandInteraction) {
-        let schedule = std::env::var("COLLECTION_SCHEDULE")
-            .unwrap_or_else(|_| "0 0 9 * * *".to_string());
+        let schedule =
+            std::env::var("COLLECTION_SCHEDULE").unwrap_or_else(|_| "0 0 9 * * *".to_string());
 
         let response = format!(
             "📅 **Collection Schedule:**\n\nCron: `{}`\n\nThe bot will automatically collect articles based on this schedule.",
@@ -168,7 +175,11 @@ impl Bot {
             return format!("No articles found from {}.", source);
         }
 
-        let mut response = format!("📰 **Found {} article(s) from {}:**\n\n", articles.len(), source);
+        let mut response = format!(
+            "📰 **Found {} article(s) from {}:**\n\n",
+            articles.len(),
+            source
+        );
 
         for (i, article) in articles.iter().take(MAX_ARTICLES_DISPLAYED).enumerate() {
             response.push_str(&format!("**{}. {}**\n", i + 1, article.title));
@@ -176,8 +187,10 @@ impl Bot {
             response.push_str(&format!("📅 Published: {}\n", article.published_date));
             response.push_str(&format!("🔗 URL: {}\n", article.url));
             
-            let summary = if article.summary.len() > MAX_SUMMARY_LENGTH {
-                format!("{}{}", &article.summary[..MAX_SUMMARY_LENGTH], TRUNCATION_SUFFIX)
+            let summary = if article.summary.chars().count() > MAX_SUMMARY_LENGTH {
+                let mut s: String = article.summary.chars().take(MAX_SUMMARY_LENGTH).collect();
+                s.push_str(TRUNCATION_SUFFIX);
+                s
             } else {
                 article.summary.clone()
             };
@@ -189,9 +202,10 @@ impl Bot {
         }
 
         // Discord message limit is 2000 characters
-        if response.len() > DISCORD_MESSAGE_LIMIT {
-            response.truncate(DISCORD_MESSAGE_LIMIT - TRUNCATION_SUFFIX.len());
-            response.push_str(TRUNCATION_SUFFIX);
+        if response.chars().count() > DISCORD_MESSAGE_LIMIT {
+            let mut truncated: String = response.chars().take(DISCORD_MESSAGE_LIMIT - TRUNCATION_SUFFIX.chars().count()).collect();
+            truncated.push_str(TRUNCATION_SUFFIX);
+            response = truncated;
         }
 
         response
@@ -265,7 +279,11 @@ impl EventHandler for Bot {
         }
     }
 
-    async fn interaction_create(&self, ctx: Context, interaction: serenity::model::application::Interaction) {
+    async fn interaction_create(
+        &self,
+        ctx: Context,
+        interaction: serenity::model::application::Interaction,
+    ) {
         if let serenity::model::application::Interaction::Command(command) = interaction {
             tracing::info!("Received command: {}", command.data.name);
 
@@ -337,7 +355,7 @@ mod tests {
 
         let response = bot.format_articles_response(&articles, "Test");
 
-        assert!(response.len() <= DISCORD_MESSAGE_LIMIT);
+        assert!(response.chars().count() <= DISCORD_MESSAGE_LIMIT);
         assert!(response.ends_with(TRUNCATION_SUFFIX));
     }
 
