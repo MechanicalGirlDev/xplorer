@@ -25,12 +25,7 @@ async fn main() {
     tracing::info!("Collection schedule: {}", config.collection_schedule);
 
     // Create bot instance
-    let bot = Bot::new(
-        config.arxiv_search_query.clone(),
-        config.arxiv_max_results,
-        config.collection_schedule.clone(),
-        config.guild_id,
-    );
+    let bot = Bot::new(&config);
 
     // Set up Discord client
     let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES;

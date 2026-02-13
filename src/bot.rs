@@ -6,6 +6,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::collectors::{Article, ArxivCollector, Collector, ExampleArticleCollector};
+use crate::config::Config;
 
 pub struct Bot {
     collectors: Arc<Mutex<Vec<Box<dyn Collector>>>>,
@@ -16,12 +17,7 @@ pub struct Bot {
 }
 
 impl Bot {
-    pub fn new(
-        default_query: String,
-        default_max_results: usize,
-        schedule: String,
-        guild_id: Option<u64>,
-    ) -> Self {
+    pub fn new(config: &Config) -> Self {
         let collectors: Vec<Box<dyn Collector>> = vec![
             Box::new(ArxivCollector::new()),
             Box::new(ExampleArticleCollector::new()),
@@ -29,10 +25,10 @@ impl Bot {
 
         Self {
             collectors: Arc::new(Mutex::new(collectors)),
-            default_query,
-            default_max_results,
-            schedule,
-            guild_id,
+            default_query: config.arxiv_search_query.clone(),
+            default_max_results: config.arxiv_max_results,
+            schedule: config.collection_schedule.clone(),
+            guild_id: config.guild_id,
         }
     }
 
