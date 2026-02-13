@@ -5,6 +5,7 @@ use super::{Article, Collector, CollectorResult};
 /// Example collector for general article/news sites
 /// This is a mock implementation that demonstrates how to add more collectors
 pub struct ExampleArticleCollector {
+    #[allow(dead_code)]
     client: reqwest::Client,
 }
 

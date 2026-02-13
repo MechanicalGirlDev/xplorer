@@ -1,4 +1,4 @@
-use serenity::all::{CommandInteraction, CreateInteractionResponse, CreateInteractionResponseMessage};
+use serenity::all::{CommandInteraction, CreateInteractionResponse, CreateInteractionResponseMessage, EditInteractionResponse};
 use serenity::async_trait;
 use serenity::client::{Context, EventHandler};
 use serenity::model::gateway::Ready;
@@ -92,7 +92,7 @@ impl Bot {
                         let _ = command
                             .edit_response(
                                 &ctx.http,
-                                CreateInteractionResponseMessage::new()
+                                EditInteractionResponse::new()
                                     .content(format!("❌ Error: {}", e)),
                             )
                             .await;
@@ -103,7 +103,7 @@ impl Bot {
                 let _ = command
                     .edit_response(
                         &ctx.http,
-                        CreateInteractionResponseMessage::new()
+                        EditInteractionResponse::new()
                             .content(format!("❌ Unknown source: {}", source)),
                     )
                     .await;
@@ -114,7 +114,7 @@ impl Bot {
         let response = self.format_articles_response(&all_articles, source);
 
         if let Err(why) = command
-            .edit_response(&ctx.http, CreateInteractionResponseMessage::new().content(response))
+            .edit_response(&ctx.http, EditInteractionResponse::new().content(response))
             .await
         {
             tracing::error!("Cannot respond to slash command: {}", why);
@@ -192,6 +192,7 @@ impl Bot {
         response
     }
 
+    #[allow(dead_code)]
     pub async fn periodic_collection(&self, ctx: Context, channel_id: u64) {
         tracing::info!("Running periodic collection");
 

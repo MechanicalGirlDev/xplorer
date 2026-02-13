@@ -7,7 +7,6 @@ use serenity::all::GatewayIntents;
 use serenity::Client;
 use std::env;
 use tokio_cron_scheduler::{Job, JobScheduler};
-use tracing_subscriber;
 
 #[tokio::main]
 async fn main() {
@@ -49,8 +48,9 @@ async fn main() {
         .expect("Error creating client");
 
     // Set up scheduler for periodic collection
-    let shard_manager = client.shard_manager.clone();
-    let cache_and_http = client.cache_and_http.clone();
+    let _shard_manager = client.shard_manager.clone();
+    let _cache = client.cache.clone();
+    let http = client.http.clone();
 
     tokio::spawn(async move {
         tracing::info!("Setting up scheduler");
@@ -67,9 +67,10 @@ async fn main() {
                 tracing::info!("Periodic collection will post to channel {}", channel_id);
                 
                 let schedule_str = schedule.clone();
+                let http_clone = http.clone();
                 let job = Job::new_async(schedule_str.as_str(), move |_uuid, _l| {
-                    let cache_and_http = cache_and_http.clone();
-                    let channel_id = channel_id;
+                    let _http = http_clone.clone();
+                    let _channel_id = channel_id;
                     
                     Box::pin(async move {
                         tracing::info!("Scheduler triggered");
