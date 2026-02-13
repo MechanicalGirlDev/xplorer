@@ -13,6 +13,11 @@ pub struct Bot {
     default_max_results: usize,
 }
 
+const MAX_ARTICLES_DISPLAYED: usize = 5;
+const DISCORD_MESSAGE_LIMIT: usize = 2000;
+const MAX_SUMMARY_LENGTH: usize = 200;
+const TRUNCATION_SUFFIX: &str = "...";
+
 impl Bot {
     pub fn new(default_query: String, default_max_results: usize) -> Self {
         let collectors: Vec<Box<dyn Collector>> = vec![
@@ -165,28 +170,28 @@ impl Bot {
 
         let mut response = format!("📰 **Found {} article(s) from {}:**\n\n", articles.len(), source);
 
-        for (i, article) in articles.iter().take(5).enumerate() {
+        for (i, article) in articles.iter().take(MAX_ARTICLES_DISPLAYED).enumerate() {
             response.push_str(&format!("**{}. {}**\n", i + 1, article.title));
             response.push_str(&format!("👤 Authors: {}\n", article.authors.join(", ")));
             response.push_str(&format!("📅 Published: {}\n", article.published_date));
             response.push_str(&format!("🔗 URL: {}\n", article.url));
             
-            let summary = if article.summary.len() > 200 {
-                format!("{}...", &article.summary[..200])
+            let summary = if article.summary.len() > MAX_SUMMARY_LENGTH {
+                format!("{}{}", &article.summary[..MAX_SUMMARY_LENGTH], TRUNCATION_SUFFIX)
             } else {
                 article.summary.clone()
             };
             response.push_str(&format!("📝 Summary: {}\n\n", summary));
         }
 
-        if articles.len() > 5 {
-            response.push_str(&format!("_...and {} more articles_\n", articles.len() - 5));
+        if articles.len() > MAX_ARTICLES_DISPLAYED {
+            response.push_str(&format!("_...and {} more articles_\n", articles.len() - MAX_ARTICLES_DISPLAYED));
         }
 
         // Discord message limit is 2000 characters
-        if response.len() > 2000 {
-            response.truncate(1997);
-            response.push_str("...");
+        if response.len() > DISCORD_MESSAGE_LIMIT {
+            response.truncate(DISCORD_MESSAGE_LIMIT - TRUNCATION_SUFFIX.len());
+            response.push_str(TRUNCATION_SUFFIX);
         }
 
         response
@@ -273,5 +278,81 @@ impl EventHandler for Bot {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::collectors::Article;
+
+    fn create_test_article(id: usize) -> Article {
+        Article {
+            title: format!("Test Article {}", id),
+            authors: vec!["Author A".to_string(), "Author B".to_string()],
+            url: format!("http://example.com/{}", id),
+            published_date: "2024-01-01".to_string(),
+            summary: "This is a test summary.".to_string(),
+            source: "Test".to_string(),
+        }
+    }
+
+    #[test]
+    fn test_format_articles_response_max_articles() {
+        let bot = Bot::new("test".to_string(), 10);
+        let mut articles = Vec::new();
+        for i in 0..MAX_ARTICLES_DISPLAYED + 2 {
+            articles.push(create_test_article(i));
+        }
+
+        let response = bot.format_articles_response(&articles, "Test");
+
+        // Verify that we only show MAX_ARTICLES_DISPLAYED articles
+        let expected_count_str = format!("Found {} article(s)", articles.len());
+        assert!(response.contains(&expected_count_str));
+
+        // The response should contain the "more articles" message
+        let expected_more_str = format!("_...and {} more articles_", articles.len() - MAX_ARTICLES_DISPLAYED);
+        assert!(response.contains(&expected_more_str));
+    }
+
+    #[test]
+    fn test_format_articles_response_truncation() {
+        let bot = Bot::new("test".to_string(), 10);
+        let mut articles = Vec::new();
+
+        // Create articles with long content to force message truncation
+        for i in 0..MAX_ARTICLES_DISPLAYED {
+            let mut article = create_test_article(i);
+            article.title = "A".repeat(300); // 300 chars
+            article.summary = "S".repeat(MAX_SUMMARY_LENGTH + 50); // Will be truncated to MAX_SUMMARY_LENGTH
+            articles.push(article);
+        }
+
+        // Total length will be roughly:
+        // Header ~ 30
+        // 5 * (Title(300) + Authors(20) + Date(20) + URL(20) + Summary(200+3) + overhead)
+        // 5 * 563 = 2815
+        // This should definitely trigger the 2000 char limit.
+
+        let response = bot.format_articles_response(&articles, "Test");
+
+        assert!(response.len() <= DISCORD_MESSAGE_LIMIT);
+        assert!(response.ends_with(TRUNCATION_SUFFIX));
+    }
+
+    #[test]
+    fn test_format_articles_response_summary_truncation() {
+        let bot = Bot::new("test".to_string(), 10);
+        let mut article = create_test_article(1);
+        let long_summary = "A".repeat(MAX_SUMMARY_LENGTH + 10);
+        article.summary = long_summary.clone();
+
+        let articles = vec![article];
+        let response = bot.format_articles_response(&articles, "Test");
+
+        // The summary should be truncated
+        let expected_summary = format!("{}{}", &long_summary[..MAX_SUMMARY_LENGTH], TRUNCATION_SUFFIX);
+        assert!(response.contains(&expected_summary));
     }
 }
