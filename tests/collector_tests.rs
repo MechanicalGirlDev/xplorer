@@ -1,4 +1,4 @@
-use xplorer::collectors::{Article, ArxivCollector, Collector};
+use xplorer::collectors::{Article, ArxivCollector, Collector, ExampleArticleCollector};
 
 #[tokio::test]
 async fn test_arxiv_collector_creation() {
@@ -34,4 +34,16 @@ async fn test_url_encoding() {
     // We can't test actual API calls in unit tests, but we can verify
     // that the collector is properly initialized
     assert_eq!(collector.name(), "Arxiv");
+}
+
+#[tokio::test]
+async fn test_example_collector_creation() {
+    let collector = ExampleArticleCollector::new();
+    assert_eq!(collector.name(), "Example Articles");
+    assert!(!collector.description().is_empty());
+
+    let result = collector.collect("test query", 10).await;
+    assert!(result.is_ok());
+    let articles = result.unwrap();
+    assert!(articles.is_empty());
 }

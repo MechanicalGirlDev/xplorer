@@ -4,22 +4,16 @@ use super::{Article, Collector, CollectorResult};
 
 /// Example collector for general article/news sites
 /// This is a mock implementation that demonstrates how to add more collectors
+#[derive(Default)]
 pub struct ExampleArticleCollector {
-    #[allow(dead_code)]
-    client: reqwest::Client,
+    // In a real implementation, you might have fields like:
+    // client: reqwest::Client,
+    // api_key: String,
 }
 
 impl ExampleArticleCollector {
     pub fn new() -> Self {
-        Self {
-            client: reqwest::Client::new(),
-        }
-    }
-}
-
-impl Default for ExampleArticleCollector {
-    fn default() -> Self {
-        Self::new()
+        Self::default()
     }
 }
 

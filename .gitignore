@@ -5,7 +5,6 @@ Cargo.lock
 
 # Environment
 .env
-config.toml
 
 # IDE
 .vscode/

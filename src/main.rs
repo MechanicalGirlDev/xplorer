@@ -1,12 +1,11 @@
 mod bot;
 mod collectors;
 mod commands;
-mod config;
 
 use bot::Bot;
-use config::Config;
 use serenity::all::GatewayIntents;
 use serenity::Client;
+use std::env;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 #[tokio::main]
@@ -16,38 +15,52 @@ async fn main() {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    // Load configuration
-    let config = Config::load().expect("Failed to load configuration");
+    // Load environment variables from .env file
+    dotenv::dotenv().ok();
+
+    // Get Discord token
+    let token = env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN must be set in environment");
+
+    // Get configuration
+    let default_query = env::var("ARXIV_SEARCH_QUERY").unwrap_or_else(|_| "cat:cs.AI".to_string());
+    let default_max_results = env::var("ARXIV_MAX_RESULTS")
+        .unwrap_or_else(|_| "10".to_string())
+        .parse::<usize>()
+        .unwrap_or(10);
+    let schedule = env::var("COLLECTION_SCHEDULE").unwrap_or_else(|_| "0 0 9 * * *".to_string());
 
     tracing::info!("Starting xplorer Discord bot");
-    tracing::info!("Default query: {}", config.arxiv_search_query);
-    tracing::info!("Default max results: {}", config.arxiv_max_results);
-    tracing::info!("Collection schedule: {}", config.collection_schedule);
+    tracing::info!("Default query: {}", default_query);
+    tracing::info!("Default max results: {}", default_max_results);
+    tracing::info!("Collection schedule: {}", schedule);
 
     // Create bot instance
-    let bot = Bot::new(&config);
+    let bot = Bot::new(default_query, default_max_results);
 
     // Set up Discord client
     let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES;
 
-    let mut client = Client::builder(&config.discord.token, intents)
+    let mut client = Client::builder(&token, intents)
         .event_handler(bot)
         .await
         .expect("Error creating client");
 
     // Set up scheduler for periodic collection
-    let schedule_str = config.collection_schedule.clone();
-    let channel_id = config.discord.channel_id;
-
     tokio::spawn(async move {
         tracing::info!("Setting up scheduler");
 
         let scheduler = JobScheduler::new().await;
 
         if let Ok(scheduler) = scheduler {
+            // Get channel ID from environment if set
+            let channel_id = env::var("CHANNEL_ID")
+                .ok()
+                .and_then(|s| s.parse::<u64>().ok());
+
             if let Some(channel_id) = channel_id {
                 tracing::info!("Periodic collection will post to channel {}", channel_id);
-                
+
+                let schedule_str = schedule.clone();
                 let job = Job::new_async(schedule_str.as_str(), move |_uuid, _l| {
                     Box::pin(async move {
                         tracing::info!("Scheduler triggered - periodic collection placeholder");
