@@ -1,6 +1,6 @@
 # xplorer
 
-A Discord bot written in Rust that collects and shares academic papers and articles from various sources like arXiv.
+A Discord bot written in Rust that collects and shares academic papers and articles from various sources.
 
 ## Architecture
 
