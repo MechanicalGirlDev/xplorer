@@ -22,14 +22,12 @@ async fn main() {
     let token = env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN must be set in environment");
 
     // Get configuration
-    let default_query = env::var("ARXIV_SEARCH_QUERY")
-        .unwrap_or_else(|_| "cat:cs.AI".to_string());
+    let default_query = env::var("ARXIV_SEARCH_QUERY").unwrap_or_else(|_| "cat:cs.AI".to_string());
     let default_max_results = env::var("ARXIV_MAX_RESULTS")
         .unwrap_or_else(|_| "10".to_string())
         .parse::<usize>()
         .unwrap_or(10);
-    let schedule = env::var("COLLECTION_SCHEDULE")
-        .unwrap_or_else(|_| "0 0 9 * * *".to_string());
+    let schedule = env::var("COLLECTION_SCHEDULE").unwrap_or_else(|_| "0 0 9 * * *".to_string());
 
     tracing::info!("Starting xplorer Discord bot");
     tracing::info!("Default query: {}", default_query);
@@ -50,9 +48,9 @@ async fn main() {
     // Set up scheduler for periodic collection
     tokio::spawn(async move {
         tracing::info!("Setting up scheduler");
-        
+
         let scheduler = JobScheduler::new().await;
-        
+
         if let Ok(scheduler) = scheduler {
             // Get channel ID from environment if set
             let channel_id = env::var("CHANNEL_ID")
@@ -61,7 +59,7 @@ async fn main() {
 
             if let Some(channel_id) = channel_id {
                 tracing::info!("Periodic collection will post to channel {}", channel_id);
-                
+
                 let schedule_str = schedule.clone();
                 let job = Job::new_async(schedule_str.as_str(), move |_uuid, _l| {
                     Box::pin(async move {

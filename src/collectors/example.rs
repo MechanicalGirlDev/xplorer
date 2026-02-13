@@ -17,6 +17,12 @@ impl ExampleArticleCollector {
     }
 }
 
+impl Default for ExampleArticleCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[async_trait]
 impl Collector for ExampleArticleCollector {
     fn name(&self) -> &str {
