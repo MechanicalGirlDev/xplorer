@@ -9,11 +9,14 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::collectors::{Article, ArxivCollector, Collector, ExampleArticleCollector};
+use crate::config::Config;
 
 pub struct Bot {
     collectors: Arc<Mutex<Vec<Box<dyn Collector>>>>,
     default_query: String,
     default_max_results: usize,
+    schedule: String,
+    guild_id: Option<u64>,
 }
 
 const MAX_ARTICLES_DISPLAYED: usize = 5;
@@ -22,7 +25,7 @@ const MAX_SUMMARY_LENGTH: usize = 200;
 const TRUNCATION_SUFFIX: &str = "...";
 
 impl Bot {
-    pub fn new(default_query: String, default_max_results: usize) -> Self {
+    pub fn new(config: &Config) -> Self {
         let collectors: Vec<Box<dyn Collector>> = vec![
             Box::new(ArxivCollector::new()),
             Box::new(ExampleArticleCollector::new()),
@@ -30,8 +33,10 @@ impl Bot {
 
         Self {
             collectors: Arc::new(Mutex::new(collectors)),
-            default_query,
-            default_max_results,
+            default_query: config.arxiv_search_query.clone(),
+            default_max_results: config.arxiv_max_results,
+            schedule: config.collection_schedule.clone(),
+            guild_id: config.discord.guild_id,
         }
     }
 
@@ -154,12 +159,9 @@ impl Bot {
     }
 
     async fn handle_schedule_command(&self, ctx: &Context, command: &CommandInteraction) {
-        let schedule =
-            std::env::var("COLLECTION_SCHEDULE").unwrap_or_else(|_| "0 0 9 * * *".to_string());
-
         let response = format!(
             "📅 **Collection Schedule:**\n\nCron: `{}`\n\nThe bot will automatically collect articles based on this schedule.",
-            schedule
+            self.schedule
         );
 
         let data = CreateInteractionResponseMessage::new().content(response);
@@ -259,16 +261,14 @@ impl EventHandler for Bot {
             crate::commands::schedule_command(),
         ];
 
-        if let Ok(guild_id_str) = std::env::var("GUILD_ID") {
-            if let Ok(guild_id) = guild_id_str.parse::<u64>() {
-                let guild_id = serenity::model::id::GuildId::new(guild_id);
-                if let Err(why) = guild_id.set_commands(&ctx.http, commands).await {
-                    tracing::error!("Cannot register guild commands: {}", why);
-                } else {
-                    tracing::info!("Registered commands for guild {}", guild_id);
-                }
-                return;
+        if let Some(guild_id) = self.guild_id {
+            let guild_id = serenity::model::id::GuildId::new(guild_id);
+            if let Err(why) = guild_id.set_commands(&ctx.http, commands).await {
+                tracing::error!("Cannot register guild commands: {}", why);
+            } else {
+                tracing::info!("Registered commands for guild {}", guild_id);
             }
+            return;
         }
 
         // Register commands globally
