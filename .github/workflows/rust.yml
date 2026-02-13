@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -24,6 +31,6 @@ jobs:
     - name: Clippy
       run: cargo clippy -- -D warnings
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
