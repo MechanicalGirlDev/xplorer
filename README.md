@@ -2,14 +2,6 @@
 
 A Discord bot written in Rust that collects and shares academic papers and articles from various sources like arXiv.
 
-## Features
-
-- 🤖 **Discord Bot Integration**: Interact with the bot using slash commands
-- 📚 **Multiple Sources**: Collect articles from arXiv and other sources (extensible)
-- 🔄 **Periodic Collection**: Automatically collect and share articles on a schedule
-- 🎯 **Trait-based Architecture**: Easy to add new article sources by implementing the `Collector` trait
-- ⚡ **Async/Await**: Built with modern async Rust for efficient performance
-
 ## Architecture
 
 The bot uses a trait-based architecture for extensibility:
