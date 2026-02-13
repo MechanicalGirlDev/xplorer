@@ -27,10 +27,10 @@ pub type CollectorResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>
 pub trait Collector: Send + Sync {
     /// Returns the name of this collector
     fn name(&self) -> &str;
-    
+
     /// Collects articles based on a query
     async fn collect(&self, query: &str, max_results: usize) -> CollectorResult<Vec<Article>>;
-    
+
     /// Returns a description of what this collector does
     fn description(&self) -> &str;
 }
