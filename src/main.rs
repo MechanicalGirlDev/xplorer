@@ -48,10 +48,6 @@ async fn main() {
         .expect("Error creating client");
 
     // Set up scheduler for periodic collection
-    let _shard_manager = client.shard_manager.clone();
-    let _cache = client.cache.clone();
-    let http = client.http.clone();
-
     tokio::spawn(async move {
         tracing::info!("Setting up scheduler");
         
@@ -67,16 +63,14 @@ async fn main() {
                 tracing::info!("Periodic collection will post to channel {}", channel_id);
                 
                 let schedule_str = schedule.clone();
-                let http_clone = http.clone();
                 let job = Job::new_async(schedule_str.as_str(), move |_uuid, _l| {
-                    let _http = http_clone.clone();
-                    let _channel_id = channel_id;
-                    
                     Box::pin(async move {
-                        tracing::info!("Scheduler triggered");
-                        // Note: In a real implementation, you would need to recreate the Bot
-                        // instance or pass it through in a way that works with the scheduler
-                        // For now, this serves as a placeholder for the scheduling mechanism
+                        tracing::info!("Scheduler triggered - periodic collection placeholder");
+                        // Note: To implement periodic collection, you would need to:
+                        // 1. Create a shared state structure containing collectors and HTTP client
+                        // 2. Pass it into this closure
+                        // 3. Call the collection logic here
+                        // 4. Post results to the channel using the HTTP client
                     })
                 });
 
