@@ -1,0 +1,6 @@
+services:
+  xplorer:
+    build: .
+    restart: always
+    env_file:
+      - .env
